@@ -1,0 +1,221 @@
+<apex:page showHeader="false" controller="CustomChatWindowController">
+    <style>
+    body { overflow: hidden; width: 100%; height: 100%; padding: 0; margin: 0 }
+    #waitingMessage { height: 100%; width: 100%; vertical-align: middle; text-align: center; display: none; }
+    #liveAgentClientChat.liveAgentStateWaiting #waitingMessage { display: table; }
+    .liveAgentChatInput {
+        height: 46px;
+        border-width: 2px;
+        border-style: solid;
+        border-color: gry;
+        padding: 2px 0 2px 4px;
+        background: #fff;
+        display: block;
+        width: 99%;
+    }
+    #liveAgentSaveButton, .liveAgentEndButton{
+        display: block;
+        width: 45px;
+        height: 28px;
+        padding: 0 0 3px;
+        position: absolute;
+        right: -134px;
+        color: white;
+        border-radius: 4px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        background: grey;
+        z-index: 2;
+    }
+
+    #liveAgentSaveButton{
+        bottom : 27px;
+    }
+    .liveAgentEndButton{
+        bottom :-4px;
+    }
+
+    .liveAgentSendButton {
+        display: block;
+        width: 56px;
+        height: 56px;
+        padding: 0 0 3px;
+        position: absolute;
+        bottom: -2px;
+        right: -78px;
+        color: white;
+        border-radius: 4px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        background:grey;
+    }
+    #liveAgentChatLog {
+        width: auto;
+        height: auto;
+        top: 40px;
+        position: absolute;
+        overflow-y: auto;
+        left: 0;
+        right: 0;
+        bottom: 30px;
+        border :none;
+        background:honeydew;
+    }
+    #liveAgentChatLogText .client{
+        float:right;
+        clear:both;
+    }
+
+    #liveAgentChatLogText .name{
+        display:none;
+    }
+
+    #liveAgentChatLogText .client{
+        float:right;
+        clear:both;
+    }
+
+    #liveAgentChatLogText .operator,#liveAgentChatLogTyping,#liveAgentChatLogText .system{
+        float:left;
+        clear:both;
+    }
+
+    #liveAgentChatLogTyping,#liveAgentChatLogText .system{
+        color:#ED0033;
+    }
+
+    #liveAgentChatLogText .messageText{
+        position: relative;
+        max-width: 250px;
+        padding: 0px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 10px;
+        padding: 8px;
+        line-height:22px;
+        font-size:15px;
+        color:white;
+        font-weight:800;
+        display: block;
+        margin: 13px 25px;
+    }
+
+    #liveAgentChatLogText .operator .messageText{
+        background: #ED0033;
+    }
+
+    #liveAgentChatLogText .client .messageText{
+           background: #07217D;
+    }
+
+    #liveAgentChatLogText .image{
+    	position: absolute;
+    	z-index: 999;
+    	height: 34px;
+    	border-radius: 20px;
+    }
+
+    #liveAgentChatLogText .operator .image{
+    	left:0;
+    }
+
+    #liveAgentChatLogText .client .image{
+    	right:0;
+    }
+    .img-responsive{
+        margin: 0 30px;
+    }
+
+
+
+
+    </style>
+
+    <div style="top: 0; left: 0; right: 0; bottom: 0; position: absolute;">
+        <liveAgent:clientchat >
+            <div style="top: 25px; left: 5px; right: 5px; bottom: 5px; position: absolute; z-index: 0;">
+            <liveAgent:clientChatAlertMessage />
+            <liveAgent:clientChatStatusMessage />
+            <table id="waitingMessage" cellpadding="0" cellspacing="0">
+            <tr>
+            <td>Please wait while you are connected to an available agent.</td>
+            </tr>
+            </table>
+            <div style="top: 0; right: 0; bottom: 41px; left: 0; padding: 0; position: absolute; word-wrap: break-word; z-index: 0;">
+            <liveAgent:clientChatLog />
+            </div>
+            <div style="position: absolute; height: auto; right: 0; bottom: 6px; left: 0; margin-right: 134px;">
+                <liveagent:clientChatInput />
+                <liveAgent:clientChatSendButton label="Send"/>
+                <liveAgent:clientChatSaveButton label="Save Chat" />
+                <liveAgent:clientChatEndButton label="End Chat" />
+            </div>
+            </div>
+        </liveAgent:clientchat>
+        <script>
+        	/**
+                Process:
+                1. Check for chat initialization by checking node insertion in DOM. Whenver agent accepts a chat , an auto reply is sent to Visitor. Code checks for this event.
+                2. 'DOMNodeInserted' EventListener checks for node insertion and executes a callback function.
+                3. In call back function, I check if node/message is inserted by operator/agent or client/Visitor
+                4. If message is inserted by operator , then check for agent details by 'liveagent.chasitor.getDetails().agent' and get the userId. With this userId, we check agent's fullphoturl and assign it to a global variable in javascript
+                5. If message is inserted by client/visitor, we display a hardcoded image for now
+        
+            **/
+        	var agentImg;
+        	var visiImg;
+        	var imgSrc;
+
+        	container = document.getElementById ("liveAgentChatLogText");
+            container.addEventListener('DOMNodeInserted', function(event) {
+
+        							    if(event.target.nodeName == 'SPAN' && (event.target.className == 'operator' || event.target.className == 'client')){
+
+        							    	if(event.target.className == 'operator'){
+        							    		imgSrc = agentImg;
+        							    	}else if(event.target.className == 'client'){
+        							    		imgSrc = 'https://c.cs18.content.force.com/profilephoto/005/T';
+        							    	}
+
+        							    	if(imgSrc){
+        							    		insertImage(event.target,imgSrc);
+        							    	}else{
+        							    		getAgentDetails(event.target,liveagent.chasitor.getDetails().agent.userId);
+        							    	}
+        								    
+        								}
+
+        							}, false);
+
+            function getAgentDetails(elem,userid){
+            	Visualforce.remoting.Manager.invokeAction(
+        				        '{!$RemoteAction.DirectLineCustomChatWindowController.getImage}', 
+        				        userid, 
+        				        function(result, event){
+        				            if (event.status) {
+        				            	insertImage(elem,result);
+        				            	agentImg = result;
+        				            } else if (event.type === 'exception') {
+        				            	
+        				            } else {
+        				            	
+        				            }
+        				        }, 
+        				        {escape: true}
+        				    );
+            }
+
+            function insertImage(elem, src){
+
+        	    var imagetag = document.createElement("img");
+        		imagetag.setAttribute("src", src);
+        		imagetag.setAttribute("class", 'image');
+
+        		var spantag = document.createElement("span");
+        		spantag.appendChild(imagetag);
+
+        	    elem.insertBefore(spantag, elem.firstChild);
+            }
+
+        </script>
+
+    </div>
+</apex:page>
