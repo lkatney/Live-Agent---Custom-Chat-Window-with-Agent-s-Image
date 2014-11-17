@@ -3,5 +3,5 @@
     <apiVersion>31.0</apiVersion>
     <availableInTouch>false</availableInTouch>
     <confirmationTokenRequired>false</confirmationTokenRequired>
-    <label>DirectLine_Chat_CustomWindow</label>
+    <label>Custom_Chat_Window</label>
 </ApexPage>
