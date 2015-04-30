@@ -172,7 +172,7 @@
         							    	if(event.target.className == 'operator'){
         							    		imgSrc = agentImg;
         							    	}else if(event.target.className == 'client'){
-        							    		imgSrc = 'https://c.cs18.content.force.com/profilephoto/005/T';
+        							    		imgSrc ='https://'+window.location.host+'/profilephoto/005/T';
         							    	}
 
         							    	if(imgSrc){
